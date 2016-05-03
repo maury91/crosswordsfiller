@@ -1,5 +1,13 @@
 const blackCharacter = '#';
 
+export function cloneArrayOfArray( superArray ) {
+    const newArr = [];
+    for ( const arr of superArray ) {
+        newArr.push([...arr]);
+    }
+    return newArr;
+}
+
 export function getStructure( matrix ) {
     const lineLength = matrix.length && matrix[0].length;
     const dictionary = [];
