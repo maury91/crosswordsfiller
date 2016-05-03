@@ -29,6 +29,13 @@ wordReader.on('close', () => {
 
     const structure = getStructure(matrix);
 
+    console.log('Structure',structure);
+    console.log('Number of words that needs to be inserted to complete 1 combination:',structure.length);
+
+    if ( structure.length > 9 ) {
+        console.log('With this structure will take a lot to finish 1 combination');
+    }
+
     // Use the big words array to fill the crosswords
     fillBlanks({ structure , matrix, words });
 });

@@ -1,5 +1,10 @@
 const blackCharacter = '#';
 const emptyCharacter = '*';
+const easyReadBlack = '■';
+
+const reg = new RegExp(blackCharacter,'gi');
+let maximum_level_reached = 0;
+// let lastPrint = Date.now();
 
 function cloneObjOfArray( superObj ) {
     const newObj = {};
@@ -10,7 +15,7 @@ function cloneObjOfArray( superObj ) {
 }
 
 function printMatrix( matrix ) {
-    console.log('\n\n'+matrix.join('\n'));
+    console.log('\n\n'+matrix.join('\n').replace(reg,easyReadBlack));
 }
 
 
@@ -25,6 +30,10 @@ export function fillBlanks( { index=0, structure, matrix, words }) {
 }
 
 function tryAllWords({ validWords, words, structure, index, matrix, col , row, length, horizontal }) {
+    if ( index > maximum_level_reached ) {
+        maximum_level_reached = index;
+        console.log('Reached level ',maximum_level_reached,'/',structure.length);
+    }
     // let valid = [];
     for ( const word of validWords ) {
         // console.log(word);
@@ -33,7 +42,11 @@ function tryAllWords({ validWords, words, structure, index, matrix, col , row, l
         newWords[word.length].splice(newWords[word.length].indexOf(word),1);
         // Insert the word in the matrix
         const newMatrix = insertOnMatrix({ matrix, word, col, row, horizontal });
-        // console.log(index);
+        // if ( index === maximum_level_reached && Date.now() > lastPrint+3000 ) {
+        //     lastPrint = Date.now();
+        //     console.log('Incomplete matrix (for testing) : ');
+        //     printMatrix(newMatrix);
+        // }
         if ( index+1 < structure.length ) {
             fillBlanks({
                 index : index+1,
@@ -130,5 +143,6 @@ export function getStructure( matrix ) {
             }
         }
     }
-    return dictionary;
+    // Return structure sorted by length descending
+    return dictionary.sort( (a,b) => b.length - a.length);
 }
