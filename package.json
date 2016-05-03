@@ -2,10 +2,11 @@
   "name": "crosswords-filler",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index"
+    "postInstall": "gulp build",
+    "start": "node build/index"
   },
   "repository": {
     "type": "git",
