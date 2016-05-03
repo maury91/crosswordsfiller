@@ -2,11 +2,10 @@ import fs from 'fs';
 import readline from 'readline';
 import {
     getStructure,
-    cloneArrayOfArray
+    fillBlanks
 } from './utils';
 
 const inputFile = fs.readFileSync('input.txt','utf8');
-const MAXIMUM_WORDS_FOR_LENGTH = 100;
 
 const words = {};
 const wordReader = readline.createInterface({
@@ -18,9 +17,9 @@ wordReader.on('line',( word ) => {
         if ( !words[word.length] ) {
             words[word.length] = [];
         }
-        if ( words[word.length].length < MAXIMUM_WORDS_FOR_LENGTH ) {
-            words[word.length].push(word);
-        }
+        // if ( words[word.length].length < MAXIMUM_WORDS_FOR_LENGTH ) {
+        words[word.length].push(word);
+        // }
     }
 });
 
@@ -31,5 +30,5 @@ wordReader.on('close', () => {
     const structure = getStructure(matrix);
 
     // Use the big words array to fill the crosswords
-
+    fillBlanks({ structure , matrix, words });
 });
