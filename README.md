@@ -37,15 +37,33 @@ After obtaining this information the script calculate the intersection between t
 For example on the input we are using as example the script discover that you can insert 8 words.
 The first 1 ( on the solution "about" ), have 2 intersections one in position 0,0 and on word position 0, and the other on 0,2 and on word position 2.
 
-The script after obtain all the valid words for that point, insert one by one this words and reiterate the problem on a partially filled matrix ( without touching the filled part ) :
+The script after obtain all the valid words for that point, group them by the characters they have in common in the intersection points.
+
+For example these 2 matrix :
 
 ```
-*****■****
+*****■even
 *■*■■■■*■■
 ****■*****
 *■*■■■■*■■
-*■■contact
+*■■*******
 ```
+
+```
+*****■ever
+*■*■■■■*■■
+****■*****
+*■*■■■■*■■
+*■■*******
+```
+
+have in common all the possible solutions of the other spaces.
+
+So the script after grouping this words insert only one of them in the matrix, calculate the number of combinations that exists putting other words in the free spaces, and the multiply the number of combinations found for how many word are present in the group.
+
+This process get reiterated until filling all possible matrix.
+
+The grouping logic can reduce the computation time by several orders, imagine to check space of 4 chars with 1 intersection, the script find 1570 valid words, but he try only 26 words.
 
 ### Multi Thread logic
 
@@ -55,8 +73,8 @@ Assuming that the valid words are
 
 ```
 even
-oman
-ever
+main
+done
 emma
 ```
 
@@ -82,30 +100,6 @@ emma
 
 and so on.
 
-
-### Possible tweaks
-
-The script know the intersection of the words. So words that have the same letter in the same intersection produce the same result.
-
-This 2 matrixs :
-
-```
-*****■even
-*■*■■■■*■■
-****■*****
-*■*■■■■*■■
-*■■*******
-```
-
-```
-*****■ever
-*■*■■■■*■■
-****■*****
-*■*■■■■*■■
-*■■*******
-```
-
-have in common all the possible solutions of the other spaces.
 
 ## Installation and Running
 

@@ -1,70 +1,65 @@
 const blackCharacter = '#';
 const emptyCharacter = '*';
-const easyReadBlack = '■';
 
-const reg = new RegExp(blackCharacter,'gi');
-let maximum_level_reached = 0;
-// let lastPrint = Date.now();
-
-function cloneObjOfArray( superObj ) {
-    const newObj = {};
-    for ( const key in superObj ) {
-        newObj[key] = [...superObj[key]];
+function groupWords({ words , intersections }) {
+    const groups = {};
+    for ( const word of words ) {
+        let intId = '';
+        for ( const { point } of intersections ) {
+            intId += word[point];
+        }
+        if ( !groups[intId] ) {
+            groups[intId] = [];
+        }
+        groups[intId].push(word);
     }
-    return newObj;
+    return groups;
 }
 
-function printMatrix( matrix ) {
-    console.log('\n\n'+matrix.join('\n').replace(reg,easyReadBlack));
-}
-
-
-export function fillBlanks( { index=0, structure, matrix, words, position=false, totalPositions }) {
+export function fillBlanks( { index=0, structure, matrix, words, position=false, totalPositions, usedGroups }) {
     const { col , row, length, horizontal, intersections } = structure[index];
     const pointStatus = getPointStatus({ matrix, intersections });
     // Make return only the first valid word to try
     let validWords = pointStatus.length ?
                         getPossibleWords({ words : words[length], pointStatus })
                         : words[length];
-    if ( position !== false ) {
-        validWords = validWords.filter( ( word, index ) => index%totalPositions === position );
-    }
     if ( validWords.length ) {
-        return tryAllWords({ validWords, words, structure, index, matrix, col , row, length, horizontal });
+        let validGroups = groupWords({ words : validWords, intersections });
+        if ( position !== false ) {
+            const vG = {};
+            const groups = Object.keys(validWords).filter( ( word, index ) => index%totalPositions === position );
+            for ( const group of groups ) {
+                vG[group] = validWords[group];
+            }
+            validWords = vG;
+        }
+        if ( Object.keys(validGroups).length ) {
+            return tryAllWordsGroups({ validGroups, words, structure, index, matrix, col , row, length, horizontal, usedGroups });
+        }
     }
 }
 
-function tryAllWords({ validWords, words, structure, index, matrix, col , row, length, horizontal }) {
-    if ( index > maximum_level_reached ) {
-        maximum_level_reached = index;
-        console.log('Reached level ',maximum_level_reached,'/',structure.length);
-    }
-    // let valid = [];
-    for ( const word of validWords ) {
-        // console.log(word);
-        const newWords = cloneObjOfArray(words);
-        // Remove the used word
-        newWords[word.length].splice(newWords[word.length].indexOf(word),1);
-        // Insert the word in the matrix
-        const newMatrix = insertOnMatrix({ matrix, word, col, row, horizontal });
-        // if ( index === maximum_level_reached && Date.now() > lastPrint+3000 ) {
-        //     lastPrint = Date.now();
-        //     console.log('Incomplete matrix (for testing) : ');
-        //     printMatrix(newMatrix);
-        // }
+function tryAllWordsGroups({ validGroups, words, structure, index, matrix, col , row, length, horizontal, usedGroups }) {
+    let combinations = 0;
+    for ( const groupID in validGroups ) {
+        const group = validGroups[groupID];
+        const word = group[0];
+        const totalWords = group.length - usedGroups.filter( id => id === groupID ).length;
         if ( index+1 < structure.length ) {
-            fillBlanks({
+            // Insert the word in the matrix
+            const newMatrix = insertOnMatrix({ matrix, word, col, row, horizontal });
+            combinations += totalWords*fillBlanks({
                 index : index+1,
                 matrix: newMatrix,
-                words : newWords,
+                usedGroups : usedGroups.concat(groupID),
+                words,
                 structure
             });
         } else {
-            printMatrix(newMatrix);
-            // valid.push(newMatrix);
+            combinations += totalWords;
         }
     }
-    // return valid;
+    return combinations;
 }
 
 function isAValidWord(pointStatus) {

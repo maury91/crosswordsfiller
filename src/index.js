@@ -31,13 +31,23 @@ if (cluster.isMaster) {
         console.log('With this structure will take a lot to finish 1 combination');
     }
 
+    let combinations_found = 0, workers_alive = 0;
+
     for ( let i=0; i<totalPositions; i++ ) {
         const worker = cluster.fork();
+        workers_alive++;
         worker.on('online', ( ) => {
             worker.send({
                 structure,
                 i
             });
+        });
+        worker.on('message', ( combinations ) => {
+            combinations_found += combinations;
+            workers_alive--;
+            if ( !workers_alive ) {
+                console.log(`Combinations found ${combinations_found}`);
+            }
         });
     }
 
@@ -50,6 +60,13 @@ if (cluster.isMaster) {
     let structure,position;
     let haveWords = false;
     let haveStructure = false;
+
+    let start = () => {
+        // Use the big words array to fill the crosswords
+        const combinations_found = fillBlanks({ structure , matrix, words, position, totalPositions, usedGroups : [] });
+        process.send(combinations_found);
+        process.exit(0);
+    };
 
     wordReader.on('line',( word ) => {
         if ( word.length ) {
@@ -65,8 +82,7 @@ if (cluster.isMaster) {
         position = message.i;
         haveStructure = true;
         if ( haveWords ) {
-            // Use the big words array to fill the crosswords
-            fillBlanks({ structure , matrix, words, position, totalPositions });
+            start();
         }
     });
 
@@ -74,8 +90,7 @@ if (cluster.isMaster) {
 
         haveWords = true;
         if ( haveStructure ) {
-            // Use the big words array to fill the crosswords
-            fillBlanks({ structure , matrix, words, position, totalPositions });
+            start();
         }
 
     });
