@@ -20,10 +20,12 @@ function printMatrix( matrix ) {
 
 
 export function fillBlanks( { index=0, structure, matrix, words }) {
-    const { col , row, length, horizontal } = structure[index];
-    const spaceStatus = getSpaceStatus({ matrix, length, col, row, horizontal });
+    const { col , row, length, horizontal, intersections } = structure[index];
+    const pointStatus = getPointStatus({ matrix, intersections });
     // Make return only the first valid word to try
-    const validWords = getPossibleWords({ words : words[length], spaceStatus });
+    const validWords = pointStatus.length ?
+                        getPossibleWords({ words : words[length], pointStatus })
+                        : words[length];
     if ( validWords.length ) {
         return tryAllWords({ validWords, words, structure, index, matrix, col , row, length, horizontal });
     }
@@ -62,11 +64,10 @@ function tryAllWords({ validWords, words, structure, index, matrix, col , row, l
     // return valid;
 }
 
-function isAValidWord(spaceStatus) {
-    const { length } = spaceStatus;
+function isAValidWord(pointStatus) {
     return ( word ) => {
-        for ( let i=0; i<length; i++ ) {
-            if ( spaceStatus[i] !== emptyCharacter && spaceStatus[i] !== word[i]) {
+        for ( const status of pointStatus ) {
+            if ( word[status.pos] !== status.char ) {
                 return false;
             }
         }
@@ -74,22 +75,22 @@ function isAValidWord(spaceStatus) {
     };
 }
 
-function getPossibleWords({ words, spaceStatus }) {
-    return words.filter(isAValidWord(spaceStatus));
+function getPossibleWords({ words, pointStatus }) {
+    return words.filter(isAValidWord(pointStatus));
 }
 
-function getSpaceStatus( { matrix, length, col, row, horizontal }) {
-    let x = col, y = row;
-    if ( horizontal ) {
-        return matrix[y].substr(x,length);
-    } else {
-        let word = '';
-        const end = y+length;
-        for ( ; y<end; y++ ) {
-            word+=matrix[y][x];
+function getPointStatus( { matrix, intersections }) {
+    const pointStatus = [];
+    for ( const intersection of intersections ) {
+        const char = matrix[intersection.row][intersection.col];
+        if ( matrix[intersection.row][intersection.col] !== emptyCharacter ) {
+            pointStatus.push({
+                pos : intersection.point,
+                char
+            });
         }
-        return word;
     }
+    return pointStatus;
 }
 
 // Insert the word and return the new matrix
@@ -104,6 +105,49 @@ function insertOnMatrix( { matrix, word, col, row, horizontal }) {
         }
     }
     return newMatrix;
+}
+
+function getIntersections( structure ) {
+    for ( let i=0;i<structure.length-1;i++) {
+        for ( let j=i+1;j<structure.length;j++) {
+            const structA = structure[i];
+            const structB = structure[j];
+            if ( structA.horizontal !== structB.horizontal ) {
+                if ( structA.horizontal ) {
+                    if ( structB.col >= structA.col && structB.col <= structA.col+structA.length
+                       && structA.row >= structB.row && structA.row <= structB.row+structB.length ){
+                        // They intersect
+                        structA.intersections.push({
+                            col : structB.col,
+                            row : structA.row,
+                            point : structB.col-structA.col
+                        });
+                        structB.intersections.push({
+                            col : structB.col,
+                            row : structA.row,
+                            point : structA.row-structB.row
+                        });
+                    }
+                } else {
+                    if ( structB.row >= structA.row && structB.row <= structA.row+structA.length
+                      && structA.col >= structB.col && structA.col <= structB.col+structB.length ){
+                        // They intersect
+                        structA.intersections.push({
+                            col : structA.col,
+                            row : structB.row,
+                            point : structB.row-structA.row
+                        });
+                        structB.intersections.push({
+                            col : structA.col,
+                            row : structB.row,
+                            point : structA.col-structB.col
+                        });
+                    }
+                }
+            }
+        }
+    }
+    return structure;
 }
 
 export function getStructure( matrix ) {
@@ -122,7 +166,8 @@ export function getStructure( matrix ) {
                         col : j,
                         row : i,
                         length : wordLength,
-                        horizontal : true
+                        horizontal : true,
+                        intersections : []
                     });
                 }
             }
@@ -137,12 +182,13 @@ export function getStructure( matrix ) {
                         col : j,
                         row : i,
                         length : wordLength,
-                        horizontal : false
+                        horizontal : false,
+                        intersections : []
                     });
                 }
             }
         }
     }
     // Return structure sorted by length descending
-    return dictionary.sort( (a,b) => b.length - a.length);
+    return getIntersections( dictionary.sort( (a,b) => b.length - a.length) );
 }
