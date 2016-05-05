@@ -2,11 +2,19 @@ import fs from 'fs';
 import cluster from 'cluster';
 import os from 'os';
 import readline from 'readline';
+import yargs from 'yargs';
 import {
     getStructure,
     fillBlanks
 } from './utils';
 
+const { wordFile } = yargs
+    .option('w', {
+        alias: 'wordFile',
+        type: 'string',
+        default: 'words.italian.txt'
+    })
+    .argv;
 
 const inputFile = fs.readFileSync('input.txt','utf8');
 const matrix = inputFile.split('\n').filter( line => line.trim().length);
@@ -37,7 +45,7 @@ if (cluster.isMaster) {
 } else {
     const words = {};
     const wordReader = readline.createInterface({
-        input: fs.createReadStream('words.italian.txt','utf8')
+        input: fs.createReadStream(wordFile,'utf8')
     });
     let structure,position;
     let haveWords = false;

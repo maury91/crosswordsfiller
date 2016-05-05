@@ -24,6 +24,7 @@
     "babel-preset-node5": "^11.0.2",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
-    "gulp-sourcemaps": "^2.0.0-alpha"
+    "gulp-sourcemaps": "^2.0.0-alpha",
+    "yargs": "^4.7.0"
   }
 }

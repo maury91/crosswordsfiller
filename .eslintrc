@@ -22,7 +22,7 @@
         "args": "none"
       }
     ],
-    "no-console": 1
+    "no-console": 0
   },
   "parser": "babel-eslint",
   "plugins": [],
