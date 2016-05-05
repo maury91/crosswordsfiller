@@ -19,13 +19,16 @@ function printMatrix( matrix ) {
 }
 
 
-export function fillBlanks( { index=0, structure, matrix, words }) {
+export function fillBlanks( { index=0, structure, matrix, words, position=false, totalPositions }) {
     const { col , row, length, horizontal, intersections } = structure[index];
     const pointStatus = getPointStatus({ matrix, intersections });
     // Make return only the first valid word to try
-    const validWords = pointStatus.length ?
+    let validWords = pointStatus.length ?
                         getPossibleWords({ words : words[length], pointStatus })
                         : words[length];
+    if ( position !== false ) {
+        validWords = validWords.filter( ( word, index ) => index%totalPositions === position );
+    }
     if ( validWords.length ) {
         return tryAllWords({ validWords, words, structure, index, matrix, col , row, length, horizontal });
     }
