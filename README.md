@@ -83,7 +83,7 @@ emma
 and so on.
 
 
-### Possible twerks
+### Possible tweaks
 
 The script know the intersection of the words. So words that have the same letter in the same intersection produce the same result.
 
