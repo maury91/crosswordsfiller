@@ -1,6 +1,8 @@
 const blackCharacter = '#';
 const emptyCharacter = '*';
 
+const foundedWords = { };
+
 function groupWords({ words , intersections }) {
     const groups = {};
     for ( const word of words ) {
@@ -16,12 +18,12 @@ function groupWords({ words , intersections }) {
     return groups;
 }
 
-export function fillBlanks( { index=0, structure, matrix, words, position=false, totalPositions, usedGroups }) {
+export function fillBlanks( { index=0, structure, matrix, words, position=false, totalPositions }) {
     const { col , row, length, horizontal, intersections } = structure[index];
-    const pointStatus = getPointStatus({ matrix, intersections });
+    const pointStatus = getPointStatus({ matrix, intersections, length });
     // Make return only the first valid word to try
-    let validWords = pointStatus.length ?
-                        getPossibleWords({ words : words[length], pointStatus })
+    let validWords = pointStatus.points.length ?
+                        getPossibleWords({ words : words[length], pointStatus, length })
                         : words[length];
     if ( validWords.length ) {
         let validGroups = groupWords({ words : validWords, intersections });
@@ -34,25 +36,24 @@ export function fillBlanks( { index=0, structure, matrix, words, position=false,
             validWords = vG;
         }
         if ( Object.keys(validGroups).length ) {
-            return tryAllWordsGroups({ validGroups, words, structure, index, matrix, col , row, length, horizontal, usedGroups });
+            return tryAllWordsGroups({ validGroups, words, structure, index : index+1, matrix, col , row, length, horizontal });
         }
     }
 }
 
-function tryAllWordsGroups({ validGroups, words, structure, index, matrix, col , row, length, horizontal, usedGroups }) {
+function tryAllWordsGroups({ validGroups, words, structure, index, matrix, col , row, length, horizontal }) {
     let combinations = 0;
     for ( const groupID in validGroups ) {
         const group = validGroups[groupID];
         const word = group[0];
-        const totalWords = group.length - usedGroups.filter( id => id === groupID ).length;
-        if ( index+1 < structure.length ) {
+        const totalWords = group.length;
+        if ( index < structure.length ) {
             // Insert the word in the matrix
             const newMatrix = insertOnMatrix({ matrix, word, col, row, horizontal });
             combinations += totalWords*fillBlanks({
-                index : index+1,
                 matrix: newMatrix,
-                usedGroups : usedGroups.concat(groupID),
                 words,
+                index,
                 structure
             });
         } else {
@@ -74,15 +75,19 @@ function isAValidWord(pointStatus) {
 }
 
 function getPossibleWords({ words, pointStatus }) {
-    return words.filter(isAValidWord(pointStatus));
+    if ( foundedWords[pointStatus.id] ) {
+        return foundedWords[pointStatus.id];
+    }
+    return foundedWords[pointStatus.id] = words.filter(isAValidWord(pointStatus.points));
 }
 
-function getPointStatus( { matrix, intersections }) {
-    const pointStatus = [];
+function getPointStatus( { matrix, intersections, length }) {
+    const pointStatus = { points : [], id : length+'.'};
     for ( const intersection of intersections ) {
         const char = matrix[intersection.row][intersection.col];
+        pointStatus.id += intersection.point+char;
         if ( matrix[intersection.row][intersection.col] !== emptyCharacter ) {
-            pointStatus.push({
+            pointStatus.points.push({
                 pos : intersection.point,
                 char
             });
